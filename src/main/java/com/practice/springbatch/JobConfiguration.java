@@ -7,6 +7,8 @@ import org.springframework.batch.core.job.builder.JobBuilder;
 import org.springframework.batch.core.launch.support.RunIdIncrementer;
 import org.springframework.batch.core.repository.JobRepository;
 import org.springframework.batch.core.step.builder.StepBuilder;
+import org.springframework.batch.core.step.skip.SkipLimitExceededException;
+import org.springframework.batch.core.step.skip.SkipPolicy;
 import org.springframework.batch.item.ItemReader;
 import org.springframework.batch.item.NonTransientResourceException;
 import org.springframework.batch.item.ParseException;
@@ -57,14 +59,21 @@ public class JobConfiguration {
             }
         };
 
+        final SkipPolicy skipPolicy = new SkipPolicy() {
+            @Override
+            public boolean shouldSkip(Throwable t, long skipCount) throws SkipLimitExceededException {
+                return t instanceof IllegalStateException && skipCount < 5;
+            }
+        };
+
         return new StepBuilder("step", jobRepository)
                 .chunk(10, platformTransactionManager)
                 .reader(itemReader)
                // .processor()
                 .writer(read -> {})
+                .allowStartIfComplete(true)
                 .faultTolerant()
-                .skip(IllegalStateException.class)
-                .skipLimit(3)
+                .skipPolicy(skipPolicy)
                 .build();
     }
 
