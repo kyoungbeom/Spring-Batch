@@ -14,7 +14,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.transaction.PlatformTransactionManager;
 
 @Slf4j
-@Configuration
+//@Configuration
 public class JobConfiguration {
 
     // JobRepository는 Spring Batch를 사용하면 자동으로 Bean로 등록됨 -> DefaultBatchConfiguration 확인
