@@ -51,6 +51,10 @@ public class JobConfiguration {
 
                 log.info("Read {}", count);
 
+                if (count == 20) {
+                    return null;
+                }
+
                 if (count >= 15) {
                     throw new IllegalStateException("예외 발생");
                 }
@@ -59,21 +63,13 @@ public class JobConfiguration {
             }
         };
 
-        final SkipPolicy skipPolicy = new SkipPolicy() {
-            @Override
-            public boolean shouldSkip(Throwable t, long skipCount) throws SkipLimitExceededException {
-                return t instanceof IllegalStateException && skipCount < 5;
-            }
-        };
-
         return new StepBuilder("step", jobRepository)
                 .chunk(10, platformTransactionManager)
                 .reader(itemReader)
                // .processor()
                 .writer(read -> {})
-                .allowStartIfComplete(true)
                 .faultTolerant()
-                .skipPolicy(skipPolicy)
+                .noRollback(IllegalStateException.class)
                 .build();
     }
 
