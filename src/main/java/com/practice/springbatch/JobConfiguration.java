@@ -25,47 +25,47 @@ public class JobConfiguration {
     public Job job(JobRepository jobRepository, Step step) {
         return new JobBuilder("job", jobRepository)
                 .start(step)
-                .incrementer(new RunIdIncrementer())
-                .build();
-    }
-
-    @Bean
-    public Step step(JobRepository jobRepository, PlatformTransactionManager platformTransactionManager) {
-        return new StepBuilder("step", jobRepository)
-                .tasklet((contribution, chunkContext) -> {
-                    log.info("step 실행");
-                    return RepeatStatus.FINISHED;
-                }, platformTransactionManager)
-                .allowStartIfComplete(true)
-                .startLimit(5)
                 .build();
     }
 
 //    @Bean
 //    public Step step(JobRepository jobRepository, PlatformTransactionManager platformTransactionManager) {
-//        final ItemReader<Object> itemReader = new ItemReader<>() {
-//            private int count = 0;
-//
-//            @Override
-//            public Object read() throws Exception, UnexpectedInputException, ParseException, NonTransientResourceException {
-//                count++;
-//
-//                log.info("Read {}", count);
-//
-//                if (count == 15) {
-//                    return null;
-//                }
-//
-//                return count;
-//            }
-//        };
-//
 //        return new StepBuilder("step", jobRepository)
-//                .chunk(10, platformTransactionManager)
-//                .reader(itemReader)
-//               // .processor()
-//                .writer(read -> {})
+//                .tasklet((contribution, chunkContext) -> {
+//                    log.info("step 실행");
+//                    return RepeatStatus.FINISHED;
+//                }, platformTransactionManager)
 //                .build();
 //    }
+
+    @Bean
+    public Step step(JobRepository jobRepository, PlatformTransactionManager platformTransactionManager) {
+        final ItemReader<Object> itemReader = new ItemReader<>() {
+            private int count = 0;
+
+            @Override
+            public Object read() throws Exception, UnexpectedInputException, ParseException, NonTransientResourceException {
+                count++;
+
+                log.info("Read {}", count);
+
+                if (count >= 15) {
+                    throw new IllegalStateException("예외 발생");
+                }
+
+                return count;
+            }
+        };
+
+        return new StepBuilder("step", jobRepository)
+                .chunk(10, platformTransactionManager)
+                .reader(itemReader)
+               // .processor()
+                .writer(read -> {})
+                .faultTolerant()
+                .skip(IllegalStateException.class)
+                .skipLimit(3)
+                .build();
+    }
 
 }
