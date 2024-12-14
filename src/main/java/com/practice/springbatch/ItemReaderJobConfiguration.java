@@ -9,6 +9,7 @@ import org.springframework.batch.core.step.builder.StepBuilder;
 import org.springframework.batch.item.ItemReader;
 import org.springframework.batch.item.file.FlatFileItemReader;
 import org.springframework.batch.item.file.builder.FlatFileItemReaderBuilder;
+import org.springframework.batch.item.file.transform.Range;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ClassPathResource;
@@ -32,22 +33,23 @@ public class ItemReaderJobConfiguration {
     public Step step(
             JobRepository jobRepository,
             PlatformTransactionManager platformTransactionManager,
-            ItemReader<User> flatFileItemReader
+            ItemReader<User> fixedLengthFlatFileItemReader
     ) {
         return new StepBuilder("step", jobRepository)
                 .<User, User>chunk(2, platformTransactionManager)
-                .reader(flatFileItemReader)
+                .reader(fixedLengthFlatFileItemReader)
                 .writer(System.out::println)
                 .build();
     }
 
     @Bean
-    public FlatFileItemReader<User> flatFileItemReader() {
+    public FlatFileItemReader<User> fixedLengthFlatFileItemReader() {
         return new FlatFileItemReaderBuilder<User>()
-                .name("flatFileItemReader")
-                .resource(new ClassPathResource("users.txt"))
+                .name("fixedLengthFlatFileItemReader")
+                .resource(new ClassPathResource("usersFixedLength.txt"))
                 .linesToSkip(2)
-                .delimited().delimiter(",")
+                .fixedLength()
+                .columns(new Range[]{new Range(1, 2), new Range(3, 4), new Range(5, 6), new Range(7, 19)})
                 .names("name", "age", "region", "telephone")
                 .targetType(User.class)
                 .strict(true)
