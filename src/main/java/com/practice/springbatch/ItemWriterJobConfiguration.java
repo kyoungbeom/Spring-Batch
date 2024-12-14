@@ -9,6 +9,7 @@ import org.springframework.batch.core.repository.JobRepository;
 import org.springframework.batch.core.step.builder.StepBuilder;
 import org.springframework.batch.item.ItemReader;
 import org.springframework.batch.item.ItemWriter;
+import org.springframework.batch.item.database.builder.JdbcBatchItemWriterBuilder;
 import org.springframework.batch.item.database.builder.JpaItemWriterBuilder;
 import org.springframework.batch.item.file.FlatFileItemReader;
 import org.springframework.batch.item.file.FlatFileItemWriter;
@@ -22,6 +23,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.PathResource;
 import org.springframework.transaction.PlatformTransactionManager;
+
+import javax.sql.DataSource;
 
 @Configuration
 public class ItemWriterJobConfiguration {
@@ -42,12 +45,12 @@ public class ItemWriterJobConfiguration {
             JobRepository jobRepository,
             PlatformTransactionManager platformTransactionManager,
             ItemReader<User> flatFileItemReader,
-            ItemWriter<User> jpaItemWriter
+            ItemWriter<User> jdbcBatchItemWriter
     ) {
         return new StepBuilder("step", jobRepository)
                 .<User, User>chunk(2, platformTransactionManager)
                 .reader(flatFileItemReader)
-                .writer(jpaItemWriter)
+                .writer(jdbcBatchItemWriter)
                 .build();
     }
 
@@ -101,6 +104,20 @@ public class ItemWriterJobConfiguration {
     public ItemWriter<User> jpaItemWriter(EntityManagerFactory entityManagerFactory) {
         return new JpaItemWriterBuilder<User>()
                 .entityManagerFactory(entityManagerFactory)
+                .build();
+    }
+
+    @Bean
+    public ItemWriter<User> jdbcBatchItemWriter(DataSource dataSource) {
+        return new JdbcBatchItemWriterBuilder<User>()
+                .dataSource(dataSource)
+                .sql("""
+                        INSERT INTO
+                            USER(name, age, region, telephone)
+                        VALUES
+                            (:name, :age, :region, :telephone)
+                        """)
+                .beanMapped()
                 .build();
     }
 
