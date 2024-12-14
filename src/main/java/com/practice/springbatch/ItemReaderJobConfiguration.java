@@ -10,6 +10,9 @@ import org.springframework.batch.item.ItemReader;
 import org.springframework.batch.item.file.FlatFileItemReader;
 import org.springframework.batch.item.file.builder.FlatFileItemReaderBuilder;
 import org.springframework.batch.item.file.transform.Range;
+import org.springframework.batch.item.json.JacksonJsonObjectReader;
+import org.springframework.batch.item.json.JsonItemReader;
+import org.springframework.batch.item.json.builder.JsonItemReaderBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ClassPathResource;
@@ -33,11 +36,11 @@ public class ItemReaderJobConfiguration {
     public Step step(
             JobRepository jobRepository,
             PlatformTransactionManager platformTransactionManager,
-            ItemReader<User> fixedLengthFlatFileItemReader
+            ItemReader<User> jsonItemReader
     ) {
         return new StepBuilder("step", jobRepository)
                 .<User, User>chunk(2, platformTransactionManager)
-                .reader(fixedLengthFlatFileItemReader)
+                .reader(jsonItemReader)
                 .writer(System.out::println)
                 .build();
     }
@@ -52,7 +55,16 @@ public class ItemReaderJobConfiguration {
                 .columns(new Range[]{new Range(1, 2), new Range(3, 4), new Range(5, 6), new Range(7, 19)})
                 .names("name", "age", "region", "telephone")
                 .targetType(User.class)
-                .strict(true)
+                .strict(false)
+                .build();
+    }
+
+    @Bean
+    public JsonItemReader<User> jsonItemReader() {
+        return new JsonItemReaderBuilder<User>()
+                .name("jsonItemReader")
+                .resource(new ClassPathResource("users.json"))
+                .jsonObjectReader(new JacksonJsonObjectReader<>(User.class))
                 .build();
     }
 
