@@ -12,7 +12,9 @@ import org.springframework.batch.item.file.FlatFileItemReader;
 import org.springframework.batch.item.file.FlatFileItemWriter;
 import org.springframework.batch.item.file.builder.FlatFileItemReaderBuilder;
 import org.springframework.batch.item.file.builder.FlatFileItemWriterBuilder;
-import org.springframework.batch.item.file.transform.Range;
+import org.springframework.batch.item.json.JacksonJsonObjectMarshaller;
+import org.springframework.batch.item.json.JsonFileItemWriter;
+import org.springframework.batch.item.json.builder.JsonFileItemWriterBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ClassPathResource;
@@ -38,12 +40,12 @@ public class ItemWriterJobConfiguration {
             JobRepository jobRepository,
             PlatformTransactionManager platformTransactionManager,
             ItemReader<User> flatFileItemReader,
-            ItemWriter<User> formattedFlatFileItemWriter
+            ItemWriter<User> jsonFileItemWriter
     ) {
         return new StepBuilder("step", jobRepository)
                 .<User, User>chunk(2, platformTransactionManager)
                 .reader(flatFileItemReader)
-                .writer(formattedFlatFileItemWriter)
+                .writer(jsonFileItemWriter)
                 .build();
     }
 
@@ -81,6 +83,15 @@ public class ItemWriterJobConfiguration {
 //                .shouldDeleteIfExists(false)
 //                .append(true)
 //                .shouldDeleteIfEmpty()
+                .build();
+    }
+
+    @Bean
+    public JsonFileItemWriter<User> jsonFileItemWriter() {
+        return new JsonFileItemWriterBuilder<User>()
+                .name("jsonFileItemWriter")
+                .resource(new PathResource("src/main/resources/new_users.json"))
+                .jsonObjectMarshaller(new JacksonJsonObjectMarshaller<>())
                 .build();
     }
 
