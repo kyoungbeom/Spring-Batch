@@ -39,10 +39,12 @@ public class ItemProcessorJobConfiguration {
             PlatformTransactionManager platformTransactionManager,
             ItemReader<User> flatFileItemReader
     ) {
+        final List<ItemProcessor<User, User>> list = Arrays.asList(processor1(), processor2(), processor3());
+
         return new StepBuilder("step", jobRepository)
                 .<User, String>chunk(2, platformTransactionManager)
                 .reader(flatFileItemReader)
-                .processor(customProcessor())
+                .processor(new CompositeItemProcessor<>(list))
                 .writer(System.out::println)
                 .build();
     }
