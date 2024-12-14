@@ -38,12 +38,12 @@ public class ItemWriterJobConfiguration {
             JobRepository jobRepository,
             PlatformTransactionManager platformTransactionManager,
             ItemReader<User> flatFileItemReader,
-            ItemWriter<User> flatFileItemWriter
+            ItemWriter<User> formattedFlatFileItemWriter
     ) {
         return new StepBuilder("step", jobRepository)
                 .<User, User>chunk(2, platformTransactionManager)
                 .reader(flatFileItemReader)
-                .writer(flatFileItemWriter)
+                .writer(formattedFlatFileItemWriter)
                 .build();
     }
 
@@ -67,6 +67,20 @@ public class ItemWriterJobConfiguration {
                 .resource(new PathResource("src/main/resources/new_users.txt"))
                 .delimited().delimiter("_")
                 .names("name", "age", "region", "telephone")
+                .build();
+    }
+
+    @Bean
+    public FlatFileItemWriter<User> formattedFlatFileItemWriter() {
+        return new FlatFileItemWriterBuilder<User>()
+                .name("formattedFlatFileItemWriter")
+                .resource(new PathResource("src/main/resources/new_formatted_ users.txt"))
+                .formatted()
+                .format("%s의 나이는 %s입니다. 사는곳은 %s, 전화번호는 %s입니다.")
+                .names("name", "age", "region", "telephone")
+//                .shouldDeleteIfExists(false)
+//                .append(true)
+//                .shouldDeleteIfEmpty()
                 .build();
     }
 
