@@ -2,10 +2,10 @@
 Spring Batch 연습 프로젝트
 
 # 구현목록
-Partitioner Step 구현
-Parallel Step 구현
-Multi-threaded Step구현
-CompositeItemProcessor 구현 
+1. Partitioner Step 구현
+2. Parallel Step 구현
+3. Multi-threaded Step구현
+4. CompositeItemProcessor 구현 
 ItemProcessor 구현 
 JdbcBatchItemWriter 구현 
 JpaItemWriter 구현 
