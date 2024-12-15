@@ -16,7 +16,7 @@ import org.springframework.core.task.SimpleAsyncTaskExecutor;
 import org.springframework.transaction.PlatformTransactionManager;
 
 @Slf4j
-@Configuration
+//@Configuration
 public class ParallelStepJobConfig {
 
     // flow1 (step1, step2)
